@@ -1,9 +1,3 @@
-#---------------------------
-# https://mad.ens-lyon.fr/molecule/NAM?version=1626136261063163750
-# When using this file please cite
-# David Sotillo-Núñez, Matteo Nardi Cesarini, Gian Marco Elisi, Mattia Bernetti, Giovanni Bottegoni. HSDetector: An Automated
-# Protocol for Identifying Cholesterol-Binding Hot Spots in Membrane Proteins (manuscript in preparation)
-#----------------------------
 Generated with cgbuilder
 12
     1NAM     B1    1  -0.129  -0.250   0.167

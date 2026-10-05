@@ -7,13 +7,14 @@
 input_file="$1"
 solute="$2"
 topology="${3:-}"
-tcl_script="remove_close_water_v2.tcl"
+remove_script="remove_close_water.tcl"
+snap_script="snapshots.tcl"              # Part of changes of 1.1.1
 
 
 # 2. Check required arguments
 
-if [ ! -f "$tcl_script" ]; then
-    echo "Error: Required TCL script '$tcl_script' not found in current directory."
+if [ -z "$remove_script" ] || [ -z "$snap_script" ]; then
+    echo "Error: Required TCL scripts missing not found in current directory."
     exit 1
 fi
 
@@ -144,6 +145,16 @@ printf "%s\t%d\n" "$mol_name" "$total" >> system.top
 
 rm *tmp.pdb
 
-vmd -dispdev none -e "$tcl_script" -args pre-removed.pdb pre-removed.pdb removed.pdb system.top
+# ---------------- Remove Solvent Section ------------------------------
+
+vmd -dispdev none -e "$remove_script" -args pre-removed.pdb pre-removed.pdb removed.pdb $mol_name system.top
+
+# ----------------------------------------------------------------------
+
+# ---------------- Snapshots Capture Function --------------------------
+
+vmd -dispdev none -e "$snap_script" removed.pdb
+
+# ----------------------------------------------------------------------
 
 

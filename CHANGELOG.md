@@ -10,3 +10,14 @@
 
 ### Changed
 - Standardized coordinate conversions from Ångströms to nanometers for PDB parsing.
+
+## [1.1.1] - 2026-10-05
+
+### Added
+- Addition of <snapshots.tcl> script
+- Directory test/vmd-test added
+- Snapshot Functionality added "curret_directory/snaps/"
+
+### Changed
+- Changes in file <remove_close_water_v2.tcl> to <remove_close_water.tcl>
+- Topology updates with current residue name of solute molecule
