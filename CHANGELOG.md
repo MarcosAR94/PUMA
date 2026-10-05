@@ -24,9 +24,21 @@
 
 ## [1.1.2] - 2026-10-05
 
+### Added
+- Addition in <add_flu.sh>
+    - A Help function and flag handling was added
+
+## [1.1.3] - 2026-10-05
+
 ### Changed
 - Change in file name <add_flu.sh> to <add_solute.sh>
+- Only test directory remains containing both gro and pdb files and not being run
 
 ### Added
 - Addition in <add_solute.sh>
-    - A Help function and flag handling was added
+    -Line 201 now discards excesive render progress that was getting log
+
+### Deleted
+- Directory test/vmd-test
+- Directory test/gro-test
+- Directory test/pdb-test
