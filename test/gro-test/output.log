@@ -1,300 +1,0 @@
-                     :-) GROMACS - gmx editconf, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx editconf -f embedded.gro -box 40.00000 40.00000 2.000 -c no -translate 0 0 -1 -o lower_box_tmp.pdb
-
-
-GROMACS reminds you: "Everything is theoretically impossible, until it is done." (Robert Heinlein)
-
-Note that major changes are planned in future for editconf, to improve usability and utility.
-Read 268550 atoms
-Volume: 32000 nm^3, corresponds to roughly 14400000 electrons
-No velocities found
-Translating 268550 atoms (out of 268550) by 0 0 -1 nm
-new box vectors : 40.000 40.000  2.000 (nm)
-new box angles  :  90.00  90.00  90.00 (degrees)
-new box volume  :3200.00               (nm^3)
-                 :-) GROMACS - gmx insert-molecules, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx insert-molecules -ci NAM_martini3001v1.0.gro -nmol 50 -box 40.00000 40.00000 2.000 -o solute-lower_tmp.pdb
-
-Initialising inter-atomic distances...
-
-WARNING: Masses and atomic (Van der Waals) radii will be guessed
-         based on residue and atom names, since they could not be
-         definitively assigned from the information in your input
-         files. These guessed numbers might deviate from the mass
-         and radius of the atom type. Please check the output
-         files if necessary. Note, that this functionality may
-         be removed in a future GROMACS version. Please, consider
-         using another file format for your input.
-
-NOTE: From version 5.0 gmx insert-molecules uses the Van der Waals radii
-from the source below. This means the results may be different
-compared to previous GROMACS versions.
-
-++++ PLEASE READ AND CITE THE FOLLOWING REFERENCE ++++
-A. Bondi
-van der Waals Volumes and Radii
-J. Phys. Chem. (1964)
-DOI: 10.1021/j100785a001
--------- -------- --- Thank You --- -------- --------
-
-Using random seed -1543782721
-Try 1 success (now 12 atoms)!
-Try 2 success (now 24 atoms)!
-Try 3 success (now 36 atoms)!
-Try 4 success (now 48 atoms)!
-Try 5 success (now 60 atoms)!
-Try 6 success (now 72 atoms)!
-Try 7 success (now 84 atoms)!
-Try 8 success (now 96 atoms)!
-Try 9 success (now 108 atoms)!
-Try 10 success (now 120 atoms)!
-Try 11 success (now 132 atoms)!
-Try 12 success (now 144 atoms)!
-Try 13 success (now 156 atoms)!
-Try 14 success (now 168 atoms)!
-Try 15 success (now 180 atoms)!
-Try 16 success (now 192 atoms)!
-Try 17 success (now 204 atoms)!
-Try 18 success (now 216 atoms)!
-Try 19 success (now 228 atoms)!
-Try 20 success (now 240 atoms)!
-Try 21 success (now 252 atoms)!
-Try 22 success (now 264 atoms)!
-Try 23 success (now 276 atoms)!
-Try 24 success (now 288 atoms)!
-Try 25Try 26 success (now 300 atoms)!
-Try 27 success (now 312 atoms)!
-Try 28 success (now 324 atoms)!
-Try 29 success (now 336 atoms)!
-Try 30 success (now 348 atoms)!
-Try 31 success (now 360 atoms)!
-Try 32 success (now 372 atoms)!
-Try 33 success (now 384 atoms)!
-Try 34 success (now 396 atoms)!
-Try 35 success (now 408 atoms)!
-Try 36 success (now 420 atoms)!
-Try 37 success (now 432 atoms)!
-Try 38 success (now 444 atoms)!
-Try 39 success (now 456 atoms)!
-Try 40 success (now 468 atoms)!
-Try 41Try 42 success (now 480 atoms)!
-Try 43 success (now 492 atoms)!
-Try 44 success (now 504 atoms)!
-Try 45 success (now 516 atoms)!
-Try 46 success (now 528 atoms)!
-Try 47 success (now 540 atoms)!
-Try 48 success (now 552 atoms)!
-Try 49 success (now 564 atoms)!
-Try 50 success (now 576 atoms)!
-Try 51 success (now 588 atoms)!
-Try 52 success (now 600 atoms)!
-
-Added 50 molecules (out of 50 requested)
-Writing generated configuration to solute-lower_tmp.pdb
-
-Output configuration contains 600 atoms in 50 residues
-
-GROMACS reminds you: "Everything is theoretically impossible, until it is done." (Robert Heinlein)
-
-                     :-) GROMACS - gmx editconf, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx editconf -f lower_solute_box_tmp.pdb -translate 0 0 -16.00000 -o upper_box_tmp.pdb
-
-
-GROMACS reminds you: "It is a cute toxin." (Rebecca Howard)
-
-Note that major changes are planned in future for editconf, to improve usability and utility.
-Read 269150 atoms
-Volume: 3200 nm^3, corresponds to roughly 1440000 electrons
-No velocities found
-Translating 269150 atoms (out of 269150) by 0 0 -16 nm
-                 :-) GROMACS - gmx insert-molecules, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx insert-molecules -ci NAM_martini3001v1.0.gro -nmol 50 -box 40.00000 40.00000 2.000 -o solute-upper_1_tmp.pdb
-
-Initialising inter-atomic distances...
-
-WARNING: Masses and atomic (Van der Waals) radii will be guessed
-         based on residue and atom names, since they could not be
-         definitively assigned from the information in your input
-         files. These guessed numbers might deviate from the mass
-         and radius of the atom type. Please check the output
-         files if necessary. Note, that this functionality may
-         be removed in a future GROMACS version. Please, consider
-         using another file format for your input.
-
-NOTE: From version 5.0 gmx insert-molecules uses the Van der Waals radii
-from the source below. This means the results may be different
-compared to previous GROMACS versions.
-
-++++ PLEASE READ AND CITE THE FOLLOWING REFERENCE ++++
-A. Bondi
-van der Waals Volumes and Radii
-J. Phys. Chem. (1964)
-DOI: 10.1021/j100785a001
--------- -------- --- Thank You --- -------- --------
-
-Using random seed -570467425
-Try 1 success (now 12 atoms)!
-Try 2 success (now 24 atoms)!
-Try 3 success (now 36 atoms)!
-Try 4 success (now 48 atoms)!
-Try 5 success (now 60 atoms)!
-Try 6 success (now 72 atoms)!
-Try 7 success (now 84 atoms)!
-Try 8 success (now 96 atoms)!
-Try 9 success (now 108 atoms)!
-Try 10 success (now 120 atoms)!
-Try 11 success (now 132 atoms)!
-Try 12 success (now 144 atoms)!
-Try 13 success (now 156 atoms)!
-Try 14 success (now 168 atoms)!
-Try 15 success (now 180 atoms)!
-Try 16 success (now 192 atoms)!
-Try 17 success (now 204 atoms)!
-Try 18 success (now 216 atoms)!
-Try 19 success (now 228 atoms)!
-Try 20 success (now 240 atoms)!
-Try 21 success (now 252 atoms)!
-Try 22 success (now 264 atoms)!
-Try 23 success (now 276 atoms)!
-Try 24 success (now 288 atoms)!
-Try 25 success (now 300 atoms)!
-Try 26 success (now 312 atoms)!
-Try 27 success (now 324 atoms)!
-Try 28 success (now 336 atoms)!
-Try 29 success (now 348 atoms)!
-Try 30 success (now 360 atoms)!
-Try 31 success (now 372 atoms)!
-Try 32 success (now 384 atoms)!
-Try 33 success (now 396 atoms)!
-Try 34 success (now 408 atoms)!
-Try 35 success (now 420 atoms)!
-Try 36 success (now 432 atoms)!
-Try 37 success (now 444 atoms)!
-Try 38 success (now 456 atoms)!
-Try 39 success (now 468 atoms)!
-Try 40 success (now 480 atoms)!
-Try 41 success (now 492 atoms)!
-Try 42 success (now 504 atoms)!
-Try 43 success (now 516 atoms)!
-Try 44 success (now 528 atoms)!
-Try 45 success (now 540 atoms)!
-Try 46 success (now 552 atoms)!
-Try 47 success (now 564 atoms)!
-Try 48 success (now 576 atoms)!
-Try 49 success (now 588 atoms)!
-Try 50 success (now 600 atoms)!
-
-Added 50 molecules (out of 50 requested)
-Writing generated configuration to solute-upper_1_tmp.pdb
-
-Output configuration contains 600 atoms in 50 residues
-
-GROMACS reminds you: "It is a cute toxin." (Rebecca Howard)
-
-                     :-) GROMACS - gmx editconf, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx editconf -f solute-upper_1_tmp.pdb -resnr 51 -o solute-upper_tmp.pdb
-
-
-GROMACS reminds you: "It is a cute toxin." (Rebecca Howard)
-
-Note that major changes are planned in future for editconf, to improve usability and utility.
-Read 600 atoms
-Volume: 3200 nm^3, corresponds to roughly 1440000 electrons
-No velocities found
-                     :-) GROMACS - gmx editconf, 2025.3 (-:
-
-Executable:   /usr/local/gromacs/bin/gmx
-Data prefix:  /usr/local/gromacs
-Working dir:  /home/marcosasis/Documents/SIMULATIONS/my_repos/PUMA/PUMA/test/gro-test
-Command line:
-  gmx editconf -f combined-tmp.pdb -box 40.00000 40.00000 20.00000 -o pre-removed.pdb
-
-
-GROMACS reminds you: "(That makes 100 errors; please try again.)" (TeX)
-
-Note that major changes are planned in future for editconf, to improve usability and utility.
-Read 269750 atoms
-Volume: 3200 nm^3, corresponds to roughly 1440000 electrons
-No velocities found
-    system size : 40.060 40.454 19.627 (nm)
-    center      : 20.008 20.009 -7.004 (nm)
-    box vectors : 40.000 40.000  2.000 (nm)
-    box angles  :  90.00  90.00  90.00 (degrees)
-    box volume  :3200.00               (nm^3)
-    shift       : -0.008 -0.009 17.004 (nm)
-new center      : 20.000 20.000 10.003 (nm)
-new box vectors : 40.000 40.000 20.000 (nm)
-new box angles  :  90.00  90.00  90.00 (degrees)
-new box volume  :32000.00               (nm^3)
-/usr/local/lib/vmd/vmd_LINUXAMD64: /lib/x86_64-linux-gnu/libGL.so.1: no version information available (required by /usr/local/lib/vmd/vmd_LINUXAMD64)
-Info) VMD for LINUXAMD64, version 1.9.3 (November 30, 2016)
-Info) http://www.ks.uiuc.edu/Research/vmd/                         
-Info) Email questions and bug reports to vmd@ks.uiuc.edu           
-Info) Please include this reference in published work using VMD:   
-Info)    Humphrey, W., Dalke, A. and Schulten, K., `VMD - Visual   
-Info)    Molecular Dynamics', J. Molec. Graphics 1996, 14.1, 33-38.
-Info) -------------------------------------------------------------
-Info) Multithreading available, 8 CPUs detected.
-Info)   CPU features: SSE2 AVX AVX2 FMA 
-Info) Free system memory: 22GB (69%)
-Info) Creating CUDA device pool and initializing hardware...
-Info) Detected 1 available CUDA accelerator:
-Info) [0] NVIDIA GeForce RTX 3080 Ti 80 SM_8.6 @ 1.66 GHz, 12GB RAM, KTO, AE2, ZCP
-Info) Detected 1 available TachyonL/OptiX ray tracing accelerator
-Info)   Compiling 1 OptiX shaders on 1 target GPU...
-Info) Dynamically loaded 2 plugins in directory:
-Info) /usr/local/lib/vmd/plugins/LINUXAMD64/molfile
-pre-removed.pdb
-pre-removed.pdb
-removed.pdb
-system.top
-Info) Using plugin pdb for structure file pre-removed.pdb
-Info) Using plugin pdb for coordinates from file pre-removed.pdb
-Info) Determining bond structure from distance search ...
-Info) Analyzing structure ...
-Info)    Atoms: 269750
-Info)    Bonds: 8381
-Info)    Angles: 0  Dihedrals: 0  Impropers: 0  Cross-terms: 0
-Info)    Bondtypes: 0  Angletypes: 0  Dihedraltypes: 0  Impropertypes: 0
-Info)    Residues: 262078
-Info)    Waters: 0
-Info)    Segments: 1
-Info)    Fragments: 261591   Protein: 0   Nucleic: 0
-Info) Finished with coordinate file pre-removed.pdb.
-0
-Info) Using plugin pdb for coordinates from file pre-removed.pdb
-Info) Finished with coordinate file pre-removed.pdb.
-0
-atomselect0
-0
-0
-Flagging 0 water residues (0 atoms) for removal
-Nothing to remove - check your selection / cutoff / resnames.
-Info) VMD for LINUXAMD64, version 1.9.3 (November 30, 2016)
-Info) Exiting normally.
-vmd > 
