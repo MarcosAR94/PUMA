@@ -15,9 +15,18 @@
 
 ### Added
 - Addition of <snapshots.tcl> script
-- Directory test/vmd-test added
-- Snapshot Functionality added "curret_directory/snaps/"
+    - Directory test/vmd-test added
+    - Snapshot Functionality added "curret_directory/snaps/"
 
 ### Changed
 - Changes in file <remove_close_water_v2.tcl> to <remove_close_water.tcl>
-- Topology updates with current residue name of solute molecule
+    - Topology updates with current residue name of solute molecule
+
+## [1.1.2] - 2026-10-05
+
+### Changed
+- Change in file name <add_flu.sh> to <add_solute.sh>
+
+### Added
+- Addition in <add_solute.sh>
+    - A Help function and flag handling was added

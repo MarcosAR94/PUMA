@@ -1,17 +1,59 @@
 #!/bin/bash
 
-#PROTOCOLO PARA INSERTAR SOLUTE
+# ------------------------------------------------------------------------------
+# PUMA: Populate Upper/lower Membrane Aqueous-slabs
+# ------------------------------------------------------------------------------
+# Ad-hoc solution tool to insert molecules to water slabs and providing
+# practice of code review and documentation
+# ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# 1. Help Function & Flag Handling
+# ------------------------------------------------------------------------------
+show_help() {
+    cat << EOF
+Usage: $(basename "$0") [OPTIONS] <membrane.gro|pdb> <solute.gro|pdb> [topology.top]
 
-# 1. Assign arguments
+Description:
+  Automates the insertion of solute molecules into the upper and lower solvent
+  slabs of a membrane system using GROMACS and VMD.
+
+Arguments:
+  <membrane.gro|pdb>   Input membrane structure file (.gro or .pdb).
+  <solute.gro|pdb>     Solute molecule structure file (.gro or .pdb).
+  [topology.top]       (Optional) Topology file where solute count will be appended.
+
+Options:
+  -h, --help           Display this help message and exit.
+
+Dependencies & Prerequisites:
+  - GROMACS ('gmx') and VMD ('vmd') must be in your PATH.
+  - Required TCL scripts in current directory:
+      * remove_close_water.tcl
+      * snapshots.tcl
+
+Examples:
+  bash $(basename "$0") membrane.pdb solute.gro
+  bash $(basename "$0") system.gro solute.pdb system.top
+
+EOF
+}
+
+# Catch help flag immediately
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    show_help
+    exit 0
+fi
+# ------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# 2. Assign and Check Required Arguments
+# ------------------------------------------------------------------------------
 input_file="$1"
 solute="$2"
 topology="${3:-}"
 remove_script="remove_close_water.tcl"
 snap_script="snapshots.tcl"              # Part of changes of 1.1.1
-
-
-# 2. Check required arguments
 
 if [ -z "$remove_script" ] || [ -z "$snap_script" ]; then
     echo "Error: Required TCL scripts missing not found in current directory."
@@ -23,9 +65,11 @@ if [ -z "$input_file" ] || [ -z "$solute" ]; then
     echo "Usage: bash $0 <membrane.gro/pdb> <solute.gro/pdb> [topology.top]"
     exit 1
 fi
+# ------------------------------------------------------------------------------
+
 
 # ------------------------------------------------------------------------------
-# 3. START LOGGING (Place right here)
+# 3. START LOGGING
 # ------------------------------------------------------------------------------
 LOG_FILE="output.log"
 exec > >(tee -i "$LOG_FILE") 2>&1
@@ -145,16 +189,15 @@ printf "%s\t%d\n" "$mol_name" "$total" >> system.top
 
 rm *tmp.pdb
 
-# ---------------- Remove Solvent Section ------------------------------
-
+# ------------------------------------------------------------------------------
+# 8. REMOVE SOLVENT AROUND SOLUTE SECTION
+# ------------------------------------------------------------------------------
 vmd -dispdev none -e "$remove_script" -args pre-removed.pdb pre-removed.pdb removed.pdb $mol_name system.top
+# ------------------------------------------------------------------------------
 
-# ----------------------------------------------------------------------
-
-# ---------------- Snapshots Capture Function --------------------------
-
+# ------------------------------------------------------------------------------
+# 9. SNAPSHOTS CAPTURE FUNCTION
+# ------------------------------------------------------------------------------
 vmd -dispdev none -e "$snap_script" removed.pdb
-
-# ----------------------------------------------------------------------
-
+# ------------------------------------------------------------------------------
 
