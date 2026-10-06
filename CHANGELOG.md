@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.0] - 2026-10-06
+
+### Changed
+- Changes in <add_solute.sh>
+    - Functionality of TCL scripts were imported into main script to ease utilization up 
+
+### Deteleted
+- Files <remove_close_water.tcl> and <snapshots.tcl> were removed from all directories
+
 ## [1.1.3] - 2026-10-05
 
 ### Changed
