@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.1] - 2026-10-06
+
+### Added
+- Additions to <add_solute.sh>
+    - Section 3 to check if dependencies are installed
+    - If GROMACS is installed, parse PATH to be sourced
+
+### Changed
+- Changes in <add_solute.sh>
+    - Loging from Section 2 to 3
+    - Files parsed as arguments now Section 4
+    - Script functionality now Section 5
+    - Section 8 to 6
+    - Section 9 to 7
+
 ## [1.2.0] - 2026-10-06
 
 ### Changed
