@@ -8,9 +8,9 @@
 # ==============================================================================
 
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # 1. Help Function & Flag Handling
-# ------------------------------------------------------------------------------
+# ==============================================================================
 show_help() {
     cat << EOF
 Usage: $(basename "$0") [OPTIONS] <membrane.gro|pdb> <solute.gro|pdb> [topology.top]
@@ -29,9 +29,6 @@ Options:
 
 Dependencies & Prerequisites:
   - GROMACS ('gmx') and VMD ('vmd') must be in your PATH.
-  - Required TCL scripts in current directory:
-      * remove_close_water.tcl
-      * snapshots.tcl
 
 Examples:
   bash $(basename "$0") membrane.pdb solute.gro
@@ -47,9 +44,59 @@ if [[ "$1" == "-h" || "$1" == "--help" ]]; then
 fi
 # ------------------------------------------------------------------------------
 
+# ==============================================================================
+# 2. START LOGGING
+#==============================================================================
+LOG_FILE="output.log"
+exec > >(tee -i "$LOG_FILE") 2>&1
 # ------------------------------------------------------------------------------
-# 2. Assign and Check Required Arguments
+
+# ==============================================================================
+# 3. CHECK DEPENDENCIES AND VALIDATE ARGUMENTS
+# ==============================================================================
+
 # ------------------------------------------------------------------------------
+# 3.1. GROMACS Pre-Environment Setup
+# ------------------------------------------------------------------------------
+if ! command -v gmx >/dev/null 2>&1; then
+    # gmx is NOT in PATH. Try sourcing the default location as a fallback.
+    if [ -f "/usr/local/gromacs/bin/GMXRC" ]; then
+        source "/usr/local/gromacs/bin/GMXRC"
+    fi
+else
+    # gmx IS in PATH. Sourcing its specific GMXRC ensures auxiliary 
+    # environment variables are correctly loaded just in case.
+    GMX_BIN_DIR=$(dirname "$(command -v gmx)")
+    if [ -f "$GMX_BIN_DIR/GMXRC" ]; then
+        source "$GMX_BIN_DIR/GMXRC"
+    fi
+fi
+
+# ------------------------------------------------------------------------------
+# 3.2. General Dependency Verification
+# ------------------------------------------------------------------------------
+REQUIRED_CMDS=("gmx" "vmd" "convert")
+
+for cmd in "${REQUIRED_CMDS[@]}"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Error: Required command '$cmd' is not installed or not in PATH." >&2
+        
+        # Add a helpful hint specifically for GROMACS
+        if [ "$cmd" = "gmx" ]; then
+            echo "Hint: If GROMACS is installed in a custom location, run:" >&2
+            echo "      source /path/to/your/gromacs/bin/GMXRC" >&2
+        fi
+        
+        exit 1
+    fi
+done
+
+echo "All dependencies loaded successfully. Proceeding..."
+
+# ------------------------------------------------------------------------------
+# 3.3. Arguments Verification
+# ------------------------------------------------------------------------------
+
 input_file="$1"
 solute="$2"
 topology="${3:-}"
@@ -61,15 +108,13 @@ if [ -z "$input_file" ] || [ -z "$solute" ]; then
 fi
 # ------------------------------------------------------------------------------
 
+# ==============================================================================
+# 4. CHECK FILES PASSED AS ARGUMENTS
+# ==============================================================================
 
 # ------------------------------------------------------------------------------
-# 3. START LOGGING
+# 4.1. Check existence of required files
 # ------------------------------------------------------------------------------
-LOG_FILE="output.log"
-exec > >(tee -i "$LOG_FILE") 2>&1
-# ------------------------------------------------------------------------------
-
-# 4a. Check existence of required files
 if [ ! -f "$input_file" ]; then
     echo "Error: File '$input_file' not found."
     exit 1
@@ -80,15 +125,21 @@ if [ ! -f "$solute" ]; then
     exit 1
 fi
 
-# 4b. Check optional topology file
+# ------------------------------------------------------------------------------
+# 4.2. Check optional topology file
+# ------------------------------------------------------------------------------
+
 if [ -z "$topology" ] || [ ! -f "$topology" ]; then
     echo "Topology file was not provided, make sure to update topology manually"
     topology=""
 fi
 
-# 5. Validate solute and topology file formats
+# ------------------------------------------------------------------------------
+# 4.3. Validate solute and topology file formats
+# ------------------------------------------------------------------------------
+
 if [[ "$solute" != *.gro && "$solute" != *.pdb ]]; then
-    echo "Error: Solute file '$solute' must be a .gro or .pdb file."
+    echo -e "Error: Solute file '$solute' must be a .gro or .pdb file.\nCheck -h or --help if needed"
     exit 1
 fi
 
@@ -97,7 +148,10 @@ if [[ -n "$topology" && "$topology" != *.top ]]; then
     exit 1
 fi
 
-# 6. Process input structure file conditionally
+# ------------------------------------------------------------------------------
+# 4.4. Process input structure file conditionally
+# ------------------------------------------------------------------------------
+
 if [[ "$input_file" == *.gro ]]; then
     # A. Extract x, y, z from the last non-empty line (ignores insane.py trailing newlines)
     box_line=$(grep . "$input_file" | tail -n 1)
@@ -117,6 +171,11 @@ else
     echo "Error: Tool not compatible with formats different than .pdb or .gro. Please provide correct structure file."
     exit 1
 fi
+# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# 5. PUMA CORE FUNCTIONALITY (Works but needs clean up)
+# ==============================================================================
 
 # Define fixed geometric parameters
 box_h=2.000    # Insert box height in Z
@@ -168,11 +227,10 @@ tail -n +$((skip_start + 1)) solute-upper_tmp.pdb >> combined-tmp.pdb
 gmx editconf -f combined-tmp.pdb -box $x $y $z -o pre-removed.pdb
 
 # -------------------------------------------------------------------------------
-# 7.@ TOPOLOGY UPDATER
+# 5.#. Residue Name Catcher
 # -------------------------------------------------------------------------------
 
 extension="${solute##*.}"
-
 
 if [[ "$extension" == "gro" ]]; then
     # Extracts column 1 of line 3 and removes all numeric characters
@@ -182,15 +240,23 @@ elif [[ "$extension" == "pdb" ]]; then
     mol_name=$(awk '/^ATOM|^HETATM/ {print $4; exit}' "$solute")
 fi
 
-printf "%s\t%d\n" "$mol_name" "$total" >> system.top
+# -------------------------------------------------------------------------------
+# 5.#. Topology update in case of passed
+# -------------------------------------------------------------------------------
+
+if [[ -f "$topology" ]]; then
+    printf "%s\t%d\n" "$mol_name" "$total" >> "$topology"
+else
+    echo "Warning: Topology file '$topology' does not exist. Skipping update." >&2
+fi
 
 # -------------------------------------------------------------------------------
 
 rm *tmp.pdb
 
-# ------------------------------------------------------------------------------
-# 8. REMOVE SOLVENT AROUND SOLUTE SECTION
-# ------------------------------------------------------------------------------
+# ==============================================================================
+# 6. REMOVE SOLVENT AROUND SOLUTE SECTION
+# ==============================================================================
 step_remove_waters() {
     
     echo ">>> Running VMD: Removing clashing waters..."
@@ -246,8 +312,10 @@ EOF
 step_remove_waters
 
 # ------------------------------------------------------------------------------
-# 9. SNAPSHOTS CAPTURE FUNCTION
-# ------------------------------------------------------------------------------
+
+# ==============================================================================
+# 7. SNAPSHOTS CAPTURE FUNCTION
+# ==============================================================================
 
 snapshots () {
 
@@ -265,28 +333,43 @@ snapshots () {
     set out_dir "snapshots"
     file mkdir $out_dir
 
-    # 1. Selection: Exclude residue W
-    mol modselect 0 top "not resname W"
-
-    # 2. Top View
+    # 1.1. Top View
     display projection Orthographic
     display resetview
     render TachyonInternal [file join $out_dir top_view.tga]
 
-    # 3. Front View
+    # 1.2. Front View
     rotate x by -90
     render TachyonInternal [file join $out_dir front_view.tga]
 
-    # 4. Angle View
+    # 1.3. Angle View
     rotate y by -45
     rotate x by 30
     render TachyonInternal [file join $out_dir angle_view.tga]
 
-    # 5. Convert TGA to PNG inside the target directory
+    # 2.1. Selection: Exclude residue W
+    mol modselect 0 top "not resname W"    
+
+    # 2.1. Top View
+    display projection Orthographic
+    display resetview
+    render TachyonInternal [file join $out_dir top_view_solv.tga]
+
+    # 2.2. Front View
+    rotate x by -90
+    render TachyonInternal [file join $out_dir front_view_solv.tga]
+
+    # 2.3. Angle View
+    rotate y by -45
+    rotate x by 30
+    render TachyonInternal [file join $out_dir angle_view_solv.tga]
+
+    # 3.1. Convert TGA to PNG inside the target directory
     foreach view {top_view front_view angle_view} {
         set tga_path [file join $out_dir ${view}.tga]
         set png_path [file join $out_dir ${view}.png]
         exec convert $tga_path $png_path
+        file delete -force $tga_path
     }
 
     quit
@@ -296,5 +379,5 @@ EOF
 
 snapshots
 
-
+# ------------------------------------------------------------------------------
 
