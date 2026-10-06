@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # PUMA: Populate Upper/lower Membrane Aqueous-slabs
-# ------------------------------------------------------------------------------
+# ==============================================================================
 # Ad-hoc solution tool to insert molecules to water slabs and providing
 # practice of code review and documentation
-# ------------------------------------------------------------------------------
+# ==============================================================================
+
 
 # ------------------------------------------------------------------------------
 # 1. Help Function & Flag Handling
@@ -52,13 +53,6 @@ fi
 input_file="$1"
 solute="$2"
 topology="${3:-}"
-remove_script="remove_close_water.tcl"
-snap_script="snapshots.tcl"              # Part of changes of 1.1.1
-
-if [ -z "$remove_script" ] || [ -z "$snap_script" ]; then
-    echo "Error: Required TCL scripts missing not found in current directory."
-    exit 1
-fi
 
 if [ -z "$input_file" ] || [ -z "$solute" ]; then
     echo "Error: Missing required arguments."
@@ -144,7 +138,7 @@ gmx editconf -f $input_file -box $x $y $box_h -c no -translate 0 0 -1 -o lower_b
 gmx insert-molecules -ci ${solute} -nmol ${nmol} -box $x $y $box_h -o solute-lower_tmp.pdb
 
 
-#-----------COPIAR Y PEGAR EL PDB DE SOLUTE AL FINAL DEL PDB BOX1, RENOMBRAR COMO BOX2
+#-----------COPIAR Y PEGAR EL PDB DE SOLUTE AL FINAL DEL PDB ------------------------------
 
 # Variables
 skip_end=2      # number of lines to skip at end of file1
@@ -173,6 +167,10 @@ tail -n +$((skip_start + 1)) solute-upper_tmp.pdb >> combined-tmp.pdb
 
 gmx editconf -f combined-tmp.pdb -box $x $y $z -o pre-removed.pdb
 
+# -------------------------------------------------------------------------------
+# 7.@ TOPOLOGY UPDATER
+# -------------------------------------------------------------------------------
+
 extension="${solute##*.}"
 
 
@@ -186,18 +184,117 @@ fi
 
 printf "%s\t%d\n" "$mol_name" "$total" >> system.top
 
+# -------------------------------------------------------------------------------
 
 rm *tmp.pdb
 
 # ------------------------------------------------------------------------------
 # 8. REMOVE SOLVENT AROUND SOLUTE SECTION
 # ------------------------------------------------------------------------------
-vmd -dispdev none -e "$remove_script" -args pre-removed.pdb pre-removed.pdb removed.pdb $mol_name system.top
-# ------------------------------------------------------------------------------
+step_remove_waters() {
+    
+    echo ">>> Running VMD: Removing clashing waters..."
+
+    vmd -dispdev none -e <(cat << 'EOF'
+    set structfile   [lindex $argv 0]
+    set coordfile    [lindex $argv 1]
+    set outfile      [lindex $argv 2]
+    set solute_resnm [lindex $argv 3]
+    set topfile      [lindex $argv 4]
+
+    mol new $structfile
+    mol addfile $coordfile waitfor all
+
+    set closeW [atomselect top "resname W and same residue as (within 3.5 of resname $solute_resnm)"]
+    set rmres [lsort -unique -integer [$closeW get residue]]
+    set nres  [llength $rmres]
+
+    if {$nres == 0} {
+        puts "No clashing waters detected. Writing full structure..."
+        set all [atomselect top all]
+        $all writepdb $outfile
+        $all delete
+        quit
+    }
+
+    set resstr [join $rmres " "]
+    set keep [atomselect top "not (residue $resstr)"]
+    $keep writepdb $outfile
+
+    $closeW delete
+    $keep delete
+
+    # Update topology if supplied
+    if {$topfile != "" && [file exists $topfile]} {
+        set fp [open $topfile r]
+        set content [read $fp]
+        close $fp
+
+        if {[regexp -line {^\s*W\s+([0-9]+)} $content match old_count]} {
+            set new_count [expr {$old_count - $nres}]
+            regsub -line {^(\s*W\s+)[0-9]+} $content "\\1$new_count" updated_content
+            set fp [open $topfile w]
+            puts -nonewline $fp $updated_content
+            close $fp
+        }
+    }
+    quit
+EOF
+    ) -args pre-removed.pdb pre-removed.pdb removed.pdb $mol_name $topology
+}
+
+step_remove_waters
 
 # ------------------------------------------------------------------------------
 # 9. SNAPSHOTS CAPTURE FUNCTION
 # ------------------------------------------------------------------------------
-vmd -dispdev none -e "$snap_script" removed.pdb | grep -v -i ^Tachyon
-# ------------------------------------------------------------------------------
+
+snapshots () {
+
+    echo ">>> Running VMD: Taking snapshots from system..."
+
+    vmd -dispdev none -e <(cat << 'EOF'
+
+    # snapshots.tcl
+    #
+    # Script to pre-eliminary corroborate if the insertion of solutes
+    # may perhaps introduce some type of artifact to membrane system
+    #
+    
+    # Define and create output directory
+    set out_dir "snapshots"
+    file mkdir $out_dir
+
+    # 1. Selection: Exclude residue W
+    mol modselect 0 top "not resname W"
+
+    # 2. Top View
+    display projection Orthographic
+    display resetview
+    render TachyonInternal [file join $out_dir top_view.tga]
+
+    # 3. Front View
+    rotate x by -90
+    render TachyonInternal [file join $out_dir front_view.tga]
+
+    # 4. Angle View
+    rotate y by -45
+    rotate x by 30
+    render TachyonInternal [file join $out_dir angle_view.tga]
+
+    # 5. Convert TGA to PNG inside the target directory
+    foreach view {top_view front_view angle_view} {
+        set tga_path [file join $out_dir ${view}.tga]
+        set png_path [file join $out_dir ${view}.png]
+        exec convert $tga_path $png_path
+    }
+
+    quit
+EOF
+    ) removed.pdb 2>&1 | grep -v -i "tachyon"
+}
+
+snapshots
+
+
 
