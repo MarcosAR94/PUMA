@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2] - 2026-10-06
+
+### Changed
+- Changes into <README.md>
+    - Clean up of hardcoded terms
+    - Show of use
+    - Warning regarding solvent residue name
+
 ## [1.2.1] - 2026-10-06
 
 ### Added
