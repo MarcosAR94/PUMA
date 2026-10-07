@@ -177,6 +177,10 @@ fi
 # 5. PUMA CORE FUNCTIONALITY (Works but needs clean up)
 # ==============================================================================
 
+# -------------------------------------------------------------------------------
+# 5.1. GMX Tools Pipeline
+# -------------------------------------------------------------------------------
+
 # Define fixed geometric parameters
 box_h=2.000    # Insert box height in Z
 gap=1.000      # Distance from top/bottom boundaries
@@ -227,25 +231,25 @@ tail -n +$((skip_start + 1)) solute-upper_tmp.pdb >> combined-tmp.pdb
 gmx editconf -f combined-tmp.pdb -box $x $y $z -o pre-removed.pdb
 
 # -------------------------------------------------------------------------------
-# 5.#. Residue Name Catcher
+# 5.2. Residue Name Catcher
 # -------------------------------------------------------------------------------
 
 extension="${solute##*.}"
 
 if [[ "$extension" == "gro" ]]; then
     # Extracts column 1 of line 3 and removes all numeric characters
-    mol_name=$(awk 'NR==3 {print $1; exit}' "$solute" | tr -d '0-9')
+    solute_resnm=$(awk 'NR==3 {print $1; exit}' "$solute" | tr -d '0-9')
 elif [[ "$extension" == "pdb" ]]; then
     # Extracts column 4 from the first ATOM/HETATM record
-    mol_name=$(awk '/^ATOM|^HETATM/ {print $4; exit}' "$solute")
+    solute_resnm=$(awk '/^ATOM|^HETATM/ {print $4; exit}' "$solute")
 fi
 
 # -------------------------------------------------------------------------------
-# 5.#. Topology update in case of passed
+# 5.3. Topology update in case of passed
 # -------------------------------------------------------------------------------
 
 if [[ -f "$topology" ]]; then
-    printf "%s\t%d\n" "$mol_name" "$total" >> "$topology"
+    printf "%s\t%d\n" "$solute_resnm" "$total" >> "$topology"
 else
     echo "Warning: Topology file '$topology' does not exist. Skipping update." >&2
 fi
@@ -262,51 +266,113 @@ step_remove_waters() {
     echo ">>> Running VMD: Removing clashing waters..."
 
     vmd -dispdev none -e <(cat << 'EOF'
-    set structfile   [lindex $argv 0]
-    set coordfile    [lindex $argv 1]
-    set outfile      [lindex $argv 2]
-    set solute_resnm [lindex $argv 3]
-    set topfile      [lindex $argv 4]
+    set structfile    [lindex $argv 0]
+    set outfile       [lindex $argv 1]
+    set solute_resnm  [lindex $argv 2]
+    set topology      [lindex $argv 3]
 
-    mol new $structfile
-    mol addfile $coordfile waitfor all
+    # Load self-contained GROMACS structure directly (1 frame)
+    mol new $structfile waitfor all
 
-    set closeW [atomselect top "resname W and same residue as (within 3.5 of resname $solute_resnm)"]
-    set rmres [lsort -unique -integer [$closeW get residue]]
-    set nres  [llength $rmres]
+    # Define target coarse-grained solvent species
+    set candidate_solvents {W WF PW WT4}
+    set solvent_sel_str [join $candidate_solvents " "]
 
-    if {$nres == 0} {
-        puts "No clashing waters detected. Writing full structure..."
+    # Detect any clashing solvent beads within 3.5 A of the solute
+    set clash_sel [atomselect top "(resname $solvent_sel_str) and (same residue as within 3.5 of resname $solute_resnm)"]
+
+    if {[$clash_sel num] == 0} {
+        puts "\[INFO\] No clashing solvent detected. Writing full structure..."
         set all [atomselect top all]
         $all writepdb $outfile
         $all delete
+        $clash_sel delete
         quit
     }
 
-    set resstr [join $rmres " "]
+    # Tally unique residues to remove per solvent type
+    array set removed_counts {}
+    set all_rm_residues {}
+
+    foreach sname $candidate_solvents {
+        set subsel [atomselect top "(resname $sname) and (same residue as within 3.5 of resname $solute_resnm)"]
+        set u_residues [lsort -unique -integer [$subsel get residue]]
+        set count [llength $u_residues]
+        
+        set removed_counts($sname) $count
+        if {$count > 0} {
+            puts "\[INFO\] Identified $count clashing $sname residue(s) for removal."
+            set all_rm_residues [concat $all_rm_residues $u_residues]
+        }
+        $subsel delete
+    }
+
+    # Write pruned coordinates
+    set resstr [join [lsort -unique -integer $all_rm_residues] " "]
     set keep [atomselect top "not (residue $resstr)"]
     $keep writepdb $outfile
 
-    $closeW delete
+    $clash_sel delete
     $keep delete
 
-    # Update topology if supplied
-    if {$topfile != "" && [file exists $topfile]} {
-        set fp [open $topfile r]
+    # Update [ molecules ] section in topology if provided
+    if {$topology ne "" && [file exists $topology]} {
+        set fp [open $topology r]
         set content [read $fp]
         close $fp
 
-        if {[regexp -line {^\s*W\s+([0-9]+)} $content match old_count]} {
-            set new_count [expr {$old_count - $nres}]
-            regsub -line {^(\s*W\s+)[0-9]+} $content "\\1$new_count" updated_content
-            set fp [open $topfile w]
-            puts -nonewline $fp $updated_content
-            close $fp
+        set lines [split $content "\n"]
+        set new_lines {}
+        set in_molecules_section 0
+
+        foreach line $lines {
+            # Match entering the [ molecules ] directive
+            if {[regexp {^\s*\[\s*molecules\s*\]} $line]} {
+                set in_molecules_section 1
+                lappend new_lines $line
+                continue
+            }
+
+            # Match leaving [ molecules ] if a subsequent directive appears
+            if {$in_molecules_section && [regexp {^\s*\[\s*[^\]]+\s*\]} $line]} {
+                set in_molecules_section 0
+                lappend new_lines $line
+                continue
+            }
+
+            # In-place count adjustment strictly inside [ molecules ]
+            if {$in_molecules_section} {
+                set matched 0
+                foreach sname $candidate_solvents {
+                    if {$removed_counts($sname) > 0 && [regexp "^(\\s*${sname}\\s+)(\\d+)(.*)\$" $line -> prefix old_count suffix]} {
+                        set updated_count [expr {$old_count - $removed_counts($sname)}]
+                        if {$updated_count < 0} {
+                            puts "\[WARNING\] Count for $sname dropped below 0 ($updated_count). Setting to 0."
+                            set updated_count 0
+                        }
+                        lappend new_lines "${prefix}${updated_count}${suffix}"
+                        puts "\[INFO\] Updated $sname in topology: $old_count -> $updated_count"
+                        set matched 1
+                        break
+                    }
+                }
+                if {!$matched} {
+                    lappend new_lines $line
+                }
+            } else {
+                lappend new_lines $line
+            }
         }
+
+        set fp [open $topology w]
+        puts -nonewline $fp [join $new_lines "\n"]
+        close $fp
+        puts "\[INFO\] Topology file successfully written: $topology"
     }
+
     quit
 EOF
-    ) -args pre-removed.pdb pre-removed.pdb removed.pdb $mol_name $topology
+    ) -args pre-removed.pdb removed.pdb $solute_resnm $topology
 }
 
 step_remove_waters
@@ -365,7 +431,7 @@ snapshots () {
     render TachyonInternal [file join $out_dir angle_view_solv.tga]
 
     # 3.1. Convert TGA to PNG inside the target directory
-    foreach view {top_view front_view angle_view} {
+    foreach view {top_view front_view angle_view top_view_solv front_view_solv angle_view_solv } {
         set tga_path [file join $out_dir ${view}.tga]
         set png_path [file join $out_dir ${view}.png]
         exec convert $tga_path $png_path
