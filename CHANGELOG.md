@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.3] - 2026-10-07
+
+### Changed
+- Changes into <add_solute.sh>
+    - Changes in Section 5.2 <br>
+    Variable mol_name into solute_resnm to coincide with refactored TCL Heredoc script
+    - Changes in Sectio 6 <br>
+    Refactor of TCL Heredoc script to accept different type of coarse grainde solvents <br>
+    as well as correctly update topology in case of a mixture such as W & WF solvents
+- Changes into <README.md> <br>
+Correction of warning regarding solvent removal, now update to most common CG solvent molecules
+    
+
 ## [1.2.2] - 2026-10-06
 
 ### Changed
