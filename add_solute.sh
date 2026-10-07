@@ -275,7 +275,7 @@ step_remove_waters() {
     mol new $structfile waitfor all
 
     # Define target coarse-grained solvent species
-    set candidate_solvents {W WF PW WT4}
+    set candidate_solvents {W WF PW WT4 SOL WAT TIP3 TIP4 HOH TP3 T4P}
     set solvent_sel_str [join $candidate_solvents " "]
 
     # Detect any clashing solvent beads within 3.5 A of the solute
