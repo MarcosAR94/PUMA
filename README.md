@@ -11,7 +11,7 @@
 3. **Water Clash Cleanup:** Uses an embedded VMD script to identify and remove water residues located within $3.5\text{ \AA}$ of any inserted solute molecule.
 4. **Topology Synchronization (Optional):** If a topology file is passed, the script appends the total count of inserted solute molecules directly to the file and dynamically recalculates the remaining water residue counts.
 
-> **Warning [Open Issue]:** The water clash removal step currently only targets most common coarse-grained solvent molecules such as `W` `WF` `WP` `WT4`. Systems utilizing alternative water identifiers (such as `SOL` or `HOH`) will not have clashing waters removed correctly.
+> **Warning:** Support for All-Atom solvent residues is bult-in but thorough test were only applied for coarse grained residues such as `W` `FW` `WP` `WT4` 
 
 ---
 
